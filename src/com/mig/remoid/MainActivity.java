@@ -3,14 +3,22 @@ package com.mig.remoid;
 import java.io.BufferedReader;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.util.Collections;
+import java.util.List;
+
+import org.apache.http.conn.util.InetAddressUtils;
 
 import android.app.Activity;
-import android.content.Context;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.widget.TextView;
-import android.widget.Toast;
+
+// mount -o remount,rw -t yaffs2 /dev/block/mtdblock3 /system
 
 public class MainActivity extends Activity {
     /** Called when the activity is first created. */
@@ -32,10 +40,120 @@ public class MainActivity extends Activity {
         // Toast toast = Toast.makeText(context, text, duration);
         // toast.show();
         
+//        Thread t = new Thread(new Runnable() {
+//            
+//            @Override
+//            public void run() {
+//                DatagramSocket socket = null;
+//                try {
+//                    socket = new DatagramSocket(5554);
+//                } catch (SocketException e) {
+//                    Log.i("jzjz", e.getMessage(), e);
+//                }
+//                
+//                byte[] buf = new byte[256];
+//                DatagramPacket receivePacket = new DatagramPacket(buf, buf.length);
+//                
+//                while (true) {
+//                    try {
+//                        socket.receive(receivePacket);
+//                    } catch (IOException e) {
+//                        Log.i("jzjz", e.getMessage(), e);
+//                    }
+//                    
+//                    Log.i("jzjz", "received packet!");
+//                }
+//            }
+//        });
+        
+//        t.start();
+
+        
+        DisplayMetrics metrics = getApplicationContext().getResources().getDisplayMetrics();
+        int displayWidth = metrics.widthPixels;
+        int displayHeight = metrics.heightPixels;
+        
+        Log.i("jzjz", "IPv4: " + getIPAddress(true));
         Log.i("jzjz", "root: " + isRootAccessAvailable());
-        Log.i("jzjz", "openInput: " + openInputDevice(240, 400));
+        
+//        Log.i("jzjz", "execAsRoot: " + execAsRoot("chmod 666 /dev/uinput"));
+        Log.i("jzjz", "openInput: " + openInputDevice(displayWidth, displayHeight));
+        
         touchSetPtr(200, 200);
         touchDown();
+    }
+    
+    public static boolean execAsRoot(String cmd){
+        
+        if(cmd==null || cmd.equals(""))
+            throw new IllegalArgumentException();
+          
+        boolean retval = false;
+        
+        try{
+            Process suProcess = Runtime.getRuntime().exec("su");
+        
+            DataOutputStream os = 
+                new DataOutputStream(suProcess.getOutputStream());
+            
+            os.writeBytes(cmd + "\n");
+            os.flush();
+            
+            //String out = is.readLine();
+            //System.out.println(out);
+            
+            os.writeBytes("exit\n");
+            os.flush();
+        
+            try{
+              int suProcessRetval = suProcess.waitFor();
+              if (255 != suProcessRetval){
+                // Root access granted
+                retval = true;
+              }else{
+                // Root access denied
+                retval = false;
+              }
+            }catch (Exception ex){
+              Log.e("Error executing root action", ex.toString());
+            }
+          
+        }catch (IOException ex){
+          Log.w("ROOT", "Can't get root access", ex);
+        }catch (SecurityException ex){
+          Log.w("ROOT", "Can't get root access", ex);
+        }catch (Exception ex){
+          Log.w("ROOT", "Error executing internal operation", ex);
+        }
+            
+        return retval;
+    }
+    
+    public static String getIPAddress(boolean useIPv4) {
+        try {
+            List<NetworkInterface> interfaces = Collections.list(NetworkInterface.getNetworkInterfaces());
+            for (NetworkInterface intf : interfaces) {
+                List<InetAddress> addrs = Collections.list(intf.getInetAddresses());
+                for (InetAddress addr : addrs) {
+                    if (!addr.isLoopbackAddress()) {
+                        String sAddr = addr.getHostAddress().toUpperCase();
+                        boolean isIPv4 = InetAddressUtils.isIPv4Address(sAddr);
+                        if (useIPv4) {
+                            if (isIPv4)
+                                return sAddr;
+                        } else {
+                            if (!isIPv4) {
+                                int delim = sAddr.indexOf('%'); // drop ip6 port
+                                                                // suffix
+                                return delim < 0 ? sAddr : sAddr.substring(0, delim);
+                            }
+                        }
+                    }
+                }
+            }
+        } catch (Exception ex) {
+        } // for now eat exceptions
+        return "";
     }
     
     public static boolean isRootAccessAvailable() {

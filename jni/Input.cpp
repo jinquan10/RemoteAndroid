@@ -28,7 +28,7 @@
 int inputFd = -1;
 
 bool openInput(int scrWidth, int scrHeight){
-	system("su -c \"chmod 666 /dev/uinput\"");
+	system("su -c \"chmod 777 /dev/uinput\"");
 	return openInputWithoutPermission(scrWidth, scrHeight);
 }
 
