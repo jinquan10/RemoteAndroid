@@ -5,10 +5,14 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
+import java.net.SocketException;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 import org.apache.http.conn.util.InetAddressUtils;
 
@@ -19,6 +23,17 @@ import android.util.Log;
 import android.widget.TextView;
 
 // mount -o remount,rw -t yaffs2 /dev/block/mtdblock3 /system
+// http://forums.xamarin.com/discussion/689/app-in-rom-system-app-fail-to-start
+
+//- su
+//- mount -o remount rw /system
+//- cp /sdcard/libmonodroid.so /system/lib
+//- cp /sdcard/test.apk /system/app
+//- chmod 644 /system/lib/libmonodroid.so 
+//- chmod 644 /system/app/test.apk 
+//- pm install /system/app/test.apk 
+//- mount -o remount ro /system
+//- reboot
 
 public class MainActivity extends Activity {
     /** Called when the activity is first created. */
@@ -40,92 +55,109 @@ public class MainActivity extends Activity {
         // Toast toast = Toast.makeText(context, text, duration);
         // toast.show();
         
-//        Thread t = new Thread(new Runnable() {
-//            
-//            @Override
-//            public void run() {
-//                DatagramSocket socket = null;
-//                try {
-//                    socket = new DatagramSocket(5554);
-//                } catch (SocketException e) {
-//                    Log.i("jzjz", e.getMessage(), e);
-//                }
-//                
-//                byte[] buf = new byte[256];
-//                DatagramPacket receivePacket = new DatagramPacket(buf, buf.length);
-//                
-//                while (true) {
-//                    try {
-//                        socket.receive(receivePacket);
-//                    } catch (IOException e) {
-//                        Log.i("jzjz", e.getMessage(), e);
-//                    }
-//                    
-//                    Log.i("jzjz", "received packet!");
-//                }
-//            }
-//        });
+        Thread t = new Thread(new Runnable() {
+            
+            @Override
+            public void run() {
+                DisplayMetrics metrics = getApplicationContext().getResources().getDisplayMetrics();
+                int displayWidth = metrics.widthPixels;
+                int displayHeight = metrics.heightPixels;
+                Log.i("jzjz", "openInput: " + openInputDevice(displayWidth, displayHeight));
+                
+                Random random = new Random();
+                
+                while (true) {
+                    int height = random.nextInt(displayHeight);
+                    if (height < 200) {
+                        height = 200;
+                    }
+                    
+                    touchOnce(random.nextInt(displayWidth), height);
+                    
+                    try {
+                        Thread.sleep(2000);
+                    } catch (InterruptedException e) {
+                    }
+                }
+                
+                // DatagramSocket socket = null;
+                // try {
+                // socket = new DatagramSocket(5554);
+                // } catch (SocketException e) {
+                // Log.i("jzjz", e.getMessage(), e);
+                // }
+                //
+                // byte[] buf = new byte[256];
+                // DatagramPacket receivePacket = new DatagramPacket(buf,
+                // buf.length);
+                //
+                // while (true) {
+                // try {
+                // socket.receive(receivePacket);
+                // } catch (IOException e) {
+                // Log.i("jzjz", e.getMessage(), e);
+                // }
+                //
+                // Log.i("jzjz", "received packet!");
+                // }
+            }
+        });
         
-//        t.start();
-
-        
-        DisplayMetrics metrics = getApplicationContext().getResources().getDisplayMetrics();
-        int displayWidth = metrics.widthPixels;
-        int displayHeight = metrics.heightPixels;
+        t.start();
+    }
+    
+    @Override
+    protected void onPostCreate(Bundle savedInstanceState) {
+        super.onPostCreate(savedInstanceState);
         
         Log.i("jzjz", "IPv4: " + getIPAddress(true));
         Log.i("jzjz", "root: " + isRootAccessAvailable());
         
-//        Log.i("jzjz", "execAsRoot: " + execAsRoot("chmod 666 /dev/uinput"));
-        Log.i("jzjz", "openInput: " + openInputDevice(displayWidth, displayHeight));
-        
-        touchSetPtr(200, 200);
-        touchDown();
+        // Log.i("jzjz", "execAsRoot: " + execAsRoot("chmod 666 /dev/uinput"));
     }
     
-    public static boolean execAsRoot(String cmd){
+    public static boolean execAsRoot(String cmd) {
         
-        if(cmd==null || cmd.equals(""))
+        if (cmd == null || cmd.equals(""))
             throw new IllegalArgumentException();
-          
+        
         boolean retval = false;
         
-        try{
+        try {
             Process suProcess = Runtime.getRuntime().exec("su");
-        
-            DataOutputStream os = 
-                new DataOutputStream(suProcess.getOutputStream());
+            
+            DataOutputStream os = new DataOutputStream(suProcess.getOutputStream());
             
             os.writeBytes(cmd + "\n");
             os.flush();
             
-            //String out = is.readLine();
-            //System.out.println(out);
+            // String out = is.readLine();
+            // System.out.println(out);
             
             os.writeBytes("exit\n");
             os.flush();
-        
-            try{
-              int suProcessRetval = suProcess.waitFor();
-              if (255 != suProcessRetval){
-                // Root access granted
-                retval = true;
-              }else{
-                // Root access denied
-                retval = false;
-              }
-            }catch (Exception ex){
-              Log.e("Error executing root action", ex.toString());
-            }
-          
-        }catch (IOException ex){
-          Log.w("ROOT", "Can't get root access", ex);
-        }catch (SecurityException ex){
-          Log.w("ROOT", "Can't get root access", ex);
-        }catch (Exception ex){
-          Log.w("ROOT", "Error executing internal operation", ex);
-        }
             
+            try {
+                int suProcessRetval = suProcess.waitFor();
+                if (255 != suProcessRetval) {
+                    // Root access granted
+                    retval = true;
+                } else {
+                    // Root access denied
+                    retval = false;
+                }
+            } catch (Exception ex) {
+                Log.e("Error executing root action", ex.toString());
+            }
+            
+        } catch (IOException ex) {
+            Log.w("ROOT", "Can't get root access", ex);
+        } catch (SecurityException ex) {
+            Log.w("ROOT", "Can't get root access", ex);
+        } catch (Exception ex) {
+            Log.w("ROOT", "Error executing internal operation", ex);
+        }
+        
         return retval;
     }
     

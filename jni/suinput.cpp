@@ -28,8 +28,7 @@
 #include "string.h"
 #include <android/log.h>
 
-const char* UINPUT_FILEPATHS[] = { "/android/dev/uinput", "/dev/uinput",
-		"/dev/input/uinput", "/dev/misc/uinput", };
+const char* UINPUT_FILEPATHS[] = { "/android/dev/uinput", "/dev/uinput", "/dev/input/uinput", "/dev/misc/uinput", };
 #define UINPUT_FILEPATHS_COUNT (sizeof(UINPUT_FILEPATHS) / sizeof(char*))
 
 int suinput_write(int uinput_fd, uint16_t type, uint16_t code, int32_t value) {
@@ -39,30 +38,32 @@ int suinput_write(int uinput_fd, uint16_t type, uint16_t code, int32_t value) {
 	event.type = type;
 	event.code = code;
 	event.value = value;
-	if (write(uinput_fd, &event, sizeof(event)) != sizeof(event))
+	if (write(uinput_fd, &event, sizeof(event)) != sizeof(event)) {
+		__android_log_print(ANDROID_LOG_DEBUG, LOGTAG, "write failed: %s", strerror(errno));
 		return -1;
+	}
+
+	__android_log_print(ANDROID_LOG_DEBUG, LOGTAG, "write successful: %s", strerror(errno));
+
 	return 0;
 }
 
-int suinput_write_syn(int uinput_fd, uint16_t type, uint16_t code,
-		int32_t value) {
+int suinput_write_syn(int uinput_fd, uint16_t type, uint16_t code, int32_t value) {
 	if (suinput_write(uinput_fd, type, code, value))
 		return -1;
 	return suinput_write(uinput_fd, EV_SYN, SYN_REPORT, 0);
 }
 
-int suinput_open(const char* device_name, const struct input_id* id,
-		const int scrWidth, const int scrHeight) {
+int suinput_open(const char* device_name, const struct input_id* id, const int scrWidth, const int scrHeight) {
 	int original_errno = 0;
 	int uinput_fd = -1;
 	struct uinput_user_dev user_dev;
 	int i;
 
-	uinput_fd = open("/dev/uinput", O_RDWR);
+	uinput_fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
 
 	if (uinput_fd == -1) {
-		__android_log_print(ANDROID_LOG_DEBUG, LOGTAG, "-1 uinput_fd: %s",
-				strerror(errno));
+		__android_log_print(ANDROID_LOG_DEBUG, LOGTAG, "-1 uinput_fd: %s", strerror(errno));
 		return -1;
 	}
 
