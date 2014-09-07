@@ -39,11 +39,11 @@ int suinput_write(int uinput_fd, uint16_t type, uint16_t code, int32_t value) {
 	event.code = code;
 	event.value = value;
 	if (write(uinput_fd, &event, sizeof(event)) != sizeof(event)) {
-		__android_log_print(ANDROID_LOG_DEBUG, LOGTAG, "write failed: %s", strerror(errno));
+		//__android_log_print(ANDROID_LOG_DEBUG, LOGTAG, "write failed: %s", strerror(errno));
 		return -1;
 	}
 
-	__android_log_print(ANDROID_LOG_DEBUG, LOGTAG, "write successful: %s", strerror(errno));
+	//__android_log_print(ANDROID_LOG_DEBUG, LOGTAG, "write successful: %s", strerror(errno));
 
 	return 0;
 }
@@ -67,7 +67,7 @@ int suinput_open(const char* device_name, const struct input_id* id, const int s
 		return -1;
 	}
 
-	LOGD(LOGTAG, "uinput_fd");
+	//LOGD(LOGTAG, "uinput_fd");
 
 	/* Set device to handle following types of events: */
 
