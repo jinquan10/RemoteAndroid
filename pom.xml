@@ -12,5 +12,6 @@
 		<module>
 		remoid-webapp
 		</module>
+		<module>remoid-webapp-interface</module>
 	</modules>
 </project>

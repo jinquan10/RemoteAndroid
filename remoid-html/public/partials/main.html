@@ -1,0 +1,202 @@
+<!-- Nav -->
+<nav class="navbar navbar-inverse no-border navbar-fixed-top">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-3 col-xs-3"></div>
+            <div class="col-md-6 col-xs-6">
+                <div class="col-md-5 col-xs-5 text-left no-padding">
+                    <div class="btn-group navbar-btn">
+                        <button ng-click="showNewStoryModal();" class="btn btn-primary">New Story</button>
+                    </div>
+                </div>
+                <div class="col-md-7 col-xs-7 text-right no-padding">
+                    <div class="navbar-btn" ng-switch on="storyFilter">
+                        <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown" ng-switch-default>
+                            <span class="glyphicon glyphicon-eye-open"></span> <span>Stories by Most Views </span><span class="caret"></span>
+                        </button>
+                        <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown" ng-switch-when="views">
+                            <span class="glyphicon glyphicon-eye-open"></span> <span>Stories by Most Views </span><span class="caret"></span>
+                        </button>
+                        <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown" ng-switch-when="stars">
+                            <span class="glyphicon glyphicon-star-empty"></span> <span>Stories by Most Stars </span><span class="caret"></span>
+                        </button>
+                        <button class="btn btn-primary dropdown-toggle" data-toggle="dropdown" ng-switch-when="users">
+                            <span class="glyphicon glyphicon-user"></span> <span>Stories by Most Users </span><span class="caret"></span>
+                        </button>
+                        <div class="dropdown-menu dropdown-menu-right no-border list-group" role="menu">
+                            <div ng-click="selectedStoryFilter('views');" class="list-group-item filter-item no-border">
+                                <span class="glyphicon glyphicon-eye-open"></span> <span> Stories by Most Views</span>
+                            </div>
+                            <div ng-click="selectedStoryFilter('stars');" class="list-group-item filter-item no-border">
+                                <span class="glyphicon glyphicon-star-empty"></span> <span> Stories by Most Stars</span>
+                            </div>
+                            <div ng-click="selectedStoryFilter('users');" class="list-group-item filter-item no-border">
+                                <span class="glyphicon glyphicon-user"></span> <span> Stories by Most Users</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-3 col-xs-3"></div>
+        </div>
+    </div>
+</nav>
+<!-- Content -->
+<div class="container">
+    <div class="row">
+        <div class="col-md-3 col-xs-3">
+            <div class="panel-group co-nav">
+                <div class="panel panel-default no-border">
+                    <div class="title underscore text-center">C</div>
+                    <div class="panel-body">
+                        <div class="list-group">
+                            <div class="list-group-item pointer no-border text-center">
+                                <span class="glyphicon glyphicon-eye-open text-right"></span> <span>View Stories</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6 col-xs-6">
+            <div class="panel-group stories">
+                <!-- Stories -->
+                <div ng-repeat="story in stories" class="panel panel-default pointer highlight no-border" ng-click="showGetStoryModal(story.id, $index)">
+                    <div class="title underscore">{{ellipse(story.title, 35)}}</div>
+                    <div class="text-right">
+                        <span ng-show="story.entriesCount > 0" class="glyphicon glyphicon-pencil"></span><span ng-show="story.entriesCount > 0"> {{story.entriesCount}} </span> <span
+                            class="glyphicon glyphicon-eye-open"></span><span> {{story.views}} </span>
+                    </div>
+                    <div>
+                        <div class="panel-body">{{story.firstEntry.entry}}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3 col-xs-3">
+            <div class="center">Ads or my stories/favorites</div>
+        </div>
+    </div>
+</div>
+<div id="modal" class="modal fade" tabindex="-1">
+    <div class="modal-dialog" ng-switch on="modalContent">
+        <!-- New Story -->
+        <div class="modal-content" ng-switch-default>
+            <form name="newStoryForm">
+                <div class="modal-header">
+                    <div class="row">
+                        <div class="col-md-3 col-xs-3"></div>
+                        <div class="col-md-6 col-xs-6">
+                            <ng-form name="newStoryTitleNgForm"> <input name="newStoryTitleInput" class="no-border form-control text-center"
+                                placeholder="{{storySchemaForCreate['title'].hintText}}" maxlength="{{storySchemaForCreate['title'].maxLength}}" ng-required="storySchemaForCreate['title'].required"
+                                ng-model="storyForCreateModel['title']" /> </ng-form>
+                            <div ng-show="newStoryTitleNgForm.newStoryTitleInput.$invalid" style="color: red">Enter a title</div>
+                        </div>
+                        <div class="col-md-3 col-xs-3"></div>
+                    </div>
+                </div>
+                <div class="modal-body underscore">
+                    <div>
+                        <ng-form class="center" name="newStoryEntryNgForm"> <textarea id="newStoryTextarea" ng-model="storyForCreateModel['entry']" class="text-area no-border form-control"
+                            ng-required="storySchemaForCreate['entry'].required" maxlength="{{storySchemaForCreate['entry'].maxLength}}" placeholder="{{storySchemaForCreate['entry'].hintText}}"
+                            ng-minlength="{{storySchemaForCreate['entry'].minLength}}" class="no-border form-control input-entry" rows="5"></textarea>
+                        <div id="newStoryCharsRequired" class="char-required"></div>
+                        <div id="newStoryCharsRemaining" class="char-remaining"></div>
+                        </ng-form>
+                    </div>
+                </div>
+            </form>
+            <div class="row" style="margin: 0; padding: 15px">
+                <div class="col-md-6 col-xs-6 text-left">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+                <div class="col-md-6 col-xs-6 text-right">
+                    <button ng-disabled="newStoryForm.$invalid" ng-click="createStory();" type="button" class="btn btn-primary">Create!</button>
+                </div>
+            </div>
+        </div>
+        <!-- View Story -->
+        <div class="modal-content" ng-switch-when="viewStory">
+            <div class="modal-header">
+                <div class="title">{{ellipse(currStory.title, 45)}}</div>
+                <div class="row" style="word-wrap: break-word;">
+                    <div class="col-md-8 col-xs-8 text-left"></div>
+                    <div class="col-md-4 col-xs-4 text-left">
+                        <div class="text-right">
+                            <span class="glyphicon glyphicon-pencil"></span><span> {{stories[currStoryIndex].entriesCount}} </span> <span class="glyphicon glyphicon-eye-open"></span><span>
+                                {{stories[currStoryIndex].views}} </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="storyBody" class="modal-body story-body">
+                <div class="coauthor">
+                    <pre>
+<span ng-repeat="entry in currStory.entries"><span class="entry">{{entry.entry}}</span>&nbsp</span><span id="nextEntry" class="entry next-entry"></span><span id="nextEntryCursor"
+                            ng-init="initCursor()" class="glyphicon glyphicon-pencil"></span>
+                    </pre>
+                </div>
+            </div>
+            <div style="color: grey; border-bottom: 1px solid #e5e5e5" ng-show="currStory.potentialEntries != null">
+                &nbsp;&nbsp;<i class="fa fa-clock-o"></i>&nbsp;<span>{{currStoryCountdown}}</span>
+            </div>
+            <!-- Potential Entries -->
+            <div class="modal-body potential-entries" style="padding-top: 0">
+                <div class="panel-group" id="potentialEntriesAccordion">
+                    <div id="potentialEntry{{potentialEntry.id}}" ng-repeat="potentialEntry in currStory.potentialEntries | orderBy:'votes'" ng-click="peekPotentialEntry(potentialEntry)"
+                        class="potential-entry no-padding no-border">
+                        <div class="underscore row pointer pad-left entry-contender">
+                            <div class="col-md-6 col-xs-6 text-left" style="padding-left: 15px">
+                                <span>{{ellipse(potentialEntry.entry, 55, true)}}</span>
+                            </div>
+                            <div class="col-md-6 col-xs-6 text-right" style="padding-right: 15px">
+                                <span class="label label-primary" ng-click="voteForEntry(currStory.id, potentialEntry.id)"><i class="fa fa-arrow-up"></i>&nbsp;{{potentialEntry.votes}}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-body">
+                <form name="entryRequestForm" class="center">
+                    <textarea ng-init="initStoryTextArea();" ng-click="clickedTextArea();" id="entryRequestTextArea" placeholder="{{entryRequestSchema['entry'].hintText}}"
+                        class="text-area no-border form-control" rows="2"></textarea>
+                    <div id="entryRequestCharsRequired" class="char-required"></div>
+                    <div id="entryRequestCharsRemaining" class="char-remaining"></div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <div class="row">
+                    <div class="col-md-10 col-xs-10 text-left" style="padding-left: 15px">
+                        <span ng-click="incrementPraise(key)" ng-repeat="(key, praise) in praisesSchema">&nbsp<span class="pointer label label-primary">{{praise.displayName}}</span><span
+                            class="pointer label label-info black-text">{{currStory['praises'][key].count}}</span></span></span>
+                    </div>
+                    <div class="col-md-2 col-xs-2 text-right" style="padding-right: 15px">
+                        <button id="submitEntryButton" ng-click="requestEntry();" type="button" class="btn btn-primary">Submit</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="modal-content" ng-switch-when="modalLoading">
+            <div class="spinner">
+                <div class="spinner-container container1">
+                    <div class="circle1"></div>
+                    <div class="circle2"></div>
+                    <div class="circle3"></div>
+                    <div class="circle4"></div>
+                </div>
+                <div class="spinner-container container2">
+                    <div class="circle1"></div>
+                    <div class="circle2"></div>
+                    <div class="circle3"></div>
+                    <div class="circle4"></div>
+                </div>
+                <div class="spinner-container container3">
+                    <div class="circle1"></div>
+                    <div class="circle2"></div>
+                    <div class="circle3"></div>
+                    <div class="circle4"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
