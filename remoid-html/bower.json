@@ -1,9 +1,9 @@
 {
-  "name": "nwm-coauthor-html",
+  "name": "miw-remoid",
   "version": "0.0.0",
-  "homepage": "https://github.com/jinquan10/CoAuthor",
+  "homepage": "https://",
   "authors": [
-    "JZ/DA"
+    "jz"
   ],
   "moduleType": [
     "node"

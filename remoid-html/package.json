@@ -1,7 +1,7 @@
 {
-  "name": "nwm-coauthor-html",
+  "name": "miw-remoid-html",
   "version": "0.0.0",
-  "description": "html version of CoAuthor.",
+  "description": "node.js to serve webpage",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"

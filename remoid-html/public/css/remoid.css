@@ -15,7 +15,7 @@
       background-color: #F8F8F8;
 }
 
-.title { /* 	font-family: CoAuthorTitle; */
+.title { /* 	font-family: RemoidTitle; */
       font-family: Times New Roman;
       font-style: italic;
       font-size: xx-large;
@@ -115,7 +115,7 @@ body {
       margin: 0;
 }
 
-.story-filter-toggle { /* 	font-family: CoAuthorTitle; */
+.story-filter-toggle { /* 	font-family: RemoidTitle; */
       padding-left: 15px;
 }
 
