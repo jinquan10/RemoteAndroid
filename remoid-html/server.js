@@ -24,7 +24,7 @@ var server = http.createServer(function(request, response) {
 	}
 }).listen(parseInt(port, 10));
 
-server.on('upgrade', function(req, socket, head) {
+server.on('Upgrade', function(req, socket, head) {
 	console.log('hi');
 	
 	stompClient.ws(req, socket, head);

@@ -1,8 +1,10 @@
-var remoidControllers = angular.module('remoidControllers', []);
-
-remoidControllers.controller('mainController', [ '$interval', '$cookies', '$scope', '$routeParams', '$http', function($interval, $cookies, $scope, $routeParams, $http) {
-	$scope.name = null;
-	
+<!DOCTYPE html>
+<html>
+<head>
+<title>Hello WebSocket</title>
+<script src="bower_components/sockjs/sockjs.min.js"></script>
+<script src="bower_components/stomp-websocket/dist/stomp.min.js"></script>
+<script type="text/javascript">
 	var stompClient = null;
 
 	function setConnected(connected) {
@@ -12,7 +14,7 @@ remoidControllers.controller('mainController', [ '$interval', '$cookies', '$scop
 		document.getElementById('response').innerHTML = '';
 	}
 
-	$scope.connect = function() {
+	function connect() {
 		var socket = new SockJS('/update');
 		stompClient = Stomp.over(socket);
 		stompClient.connect({}, function(frame) {
@@ -30,9 +32,10 @@ remoidControllers.controller('mainController', [ '$interval', '$cookies', '$scop
 		console.log("Disconnected");
 	}
 
-	$scope.sendName = function() {
+	function sendName() {
+		var name = document.getElementById('name').value;
 		stompClient.send("/app/update", {}, JSON.stringify({
-			'name' : $scope.name
+			'name' : name
 		}));
 	}
 
@@ -43,4 +46,24 @@ remoidControllers.controller('mainController', [ '$interval', '$cookies', '$scop
 		p.appendChild(document.createTextNode(message));
 		response.appendChild(p);
 	}
-} ]);
+</script>
+</head>
+<body>
+	<noscript>
+		<h2 style="color: #ff0000">Seems your browser doesn't support
+			Javascript! Websocket relies on Javascript being enabled. Please
+			enable Javascript and reload this page!</h2>
+	</noscript>
+	<div>
+		<div>
+			<button id="connect" onclick="connect();">Connect</button>
+			<button id="disconnect" disabled="disabled" onclick="disconnect();">Disconnect</button>
+		</div>
+		<div id="conversationDiv">
+			<label>What is your name?</label><input type="text" id="name" />
+			<button id="sendName" onclick="sendName();">Send</button>
+			<p id="response"></p>
+		</div>
+	</div>
+</body>
+</html>
