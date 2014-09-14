@@ -2,9 +2,11 @@ var remoidControllers = angular.module('remoidControllers', []);
 
 remoidControllers.controller('mainController', [ '$interval', '$cookies', '$scope', '$routeParams', '$http', function($interval, $cookies, $scope, $routeParams, $http) {
 	$scope.name = null;
-	
-	var stompClient = null;
 
+	$scope.stompClient = null;
+	$scope.socket = null;
+	$scope.stomp = Stomp;
+	
 	function setConnected(connected) {
 		document.getElementById('connect').disabled = connected;
 		document.getElementById('disconnect').disabled = !connected;
@@ -12,16 +14,18 @@ remoidControllers.controller('mainController', [ '$interval', '$cookies', '$scop
 		document.getElementById('response').innerHTML = '';
 	}
 
+	$scope.connected = function(frame) {
+		setConnected(true);
+		console.log('Connected: ' + frame);
+//		stompClient.subscribe('/topic/greetings', function(greeting) {
+//			showGreeting(JSON.parse(greeting.body).content);
+//		});
+	};
+
 	$scope.connect = function() {
-		var socket = new SockJS('/update');
-		stompClient = Stomp.over(socket);
-		stompClient.connect({}, function(frame) {
-			setConnected(true);
-			console.log('Connected: ' + frame);
-			stompClient.subscribe('/topic/greetings', function(greeting) {
-				showGreeting(JSON.parse(greeting.body).content);
-			});
-		});
+		$scope.socket = new SockJS('/update');
+		$scope.stompClient = $scope.stomp.over($scope.socket);
+		$scope.stompClient.connect();
 	}
 
 	function disconnect() {
@@ -31,7 +35,7 @@ remoidControllers.controller('mainController', [ '$interval', '$cookies', '$scop
 	}
 
 	$scope.sendName = function() {
-		stompClient.send("/app/update", {}, JSON.stringify({
+		$scope.stompClient.send("/app/update", {}, JSON.stringify({
 			'name' : $scope.name
 		}));
 	}
