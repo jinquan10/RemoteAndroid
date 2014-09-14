@@ -8,7 +8,8 @@
   },
   "dependencies": {
     "node-static": "~0.x",
-    "http-proxy": "1.1.6"
+    "http-proxy": "1.1.6",
+    "stompjs" : "~2.3.x"
   },
   "scripts": {
     "postinstall": "bower install"
