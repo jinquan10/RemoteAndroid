@@ -8,7 +8,7 @@ import org.springframework.stereotype.Controller;
 public class WebSocketController {
 	@MessageMapping("/update")
 	@SendTo("/topic/greetings")
-	public void greeting(HelloMessage message) throws Exception {
+	public void greeting(BrowserRequest message) throws Exception {
 		System.out.println(message.getName());
 	}
 }

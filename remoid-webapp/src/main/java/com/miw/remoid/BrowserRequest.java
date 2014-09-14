@@ -1,6 +1,6 @@
 package com.miw.remoid;
 
-public class HelloMessage {
+public class BrowserRequest {
 	private String name;
 
 	public String getName() {
