@@ -5,28 +5,29 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
-import org.apache.http.conn.scheme.PlainSocketFactory;
 import org.apache.http.conn.util.InetAddressUtils;
 
 import android.app.Activity;
 import android.content.res.Configuration;
-import android.graphics.Bitmap.Config;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.widget.TextView;
+import de.roderick.weberknecht.WebSocket;
+import de.roderick.weberknecht.WebSocketEventHandler;
+import de.roderick.weberknecht.WebSocketException;
+import de.roderick.weberknecht.WebSocketMessage;
 
 // mount -o remount,rw -t yaffs2 /dev/block/mtdblock3 /system
 // http://forums.xamarin.com/discussion/689/app-in-rom-system-app-fail-to-start
@@ -54,13 +55,15 @@ public class MainActivity extends Activity {
 		TextView tv = new TextView(this);
 		setContentView(tv);
 
+		connectJZ();
+		
 		// Context context = getApplicationContext();
 		// CharSequence text = "Hello toast!";
 		// int duration = Toast.LENGTH_SHORT;
 		//
 		// Toast toast = Toast.makeText(context, text, duration);
 		// toast.show();
-
+		
 		Thread t = new Thread(new Runnable() {
 
 			@Override
@@ -109,7 +112,7 @@ public class MainActivity extends Activity {
 			}
 		});
 
-		t.start();
+		// t.start();
 
 		Thread sockets = new Thread(new Runnable() {
 
@@ -170,14 +173,86 @@ public class MainActivity extends Activity {
 		return orientation;
 	}
 
-	@Override
-	protected void onPostCreate(Bundle savedInstanceState) {
-		super.onPostCreate(savedInstanceState);
+	public void connectWS(){
+		Thread t = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				try {
+					URI url = new URI("ws://127.0.0.1:8080/update/info");
+					WebSocket websocket = new WebSocket(url);
 
-		Log.i("jzjz", "IPv4: " + getIPAddress(true));
-		Log.i("jzjz", "root: " + isRootAccessAvailable());
+					// Register Event Handlers
+					websocket.setEventHandler(new WebSocketEventHandler() {
+						public void onOpen() {
+							System.out.println("--open");
+						}
+
+						public void onMessage(WebSocketMessage message) {
+							System.out.println("--received message: " + message.getText());
+						}
+
+						public void onClose() {
+							System.out.println("--close");
+						}
+
+						public void onPing() {
+						}
+
+						public void onPong() {
+						}
+
+						@Override
+						public void onError(IOException arg0) {
+							// TODO Auto-generated method stub
+
+						}
+					});
+
+					// Establish WebSocket Connection
+					websocket.connect();
+
+					// Send UTF-8 Text
+					websocket.send("hello world");
+
+					// Close WebSocket Connection
+					websocket.close();
+				} catch (WebSocketException wse) {
+					wse.printStackTrace();
+				} catch (URISyntaxException use) {
+					use.printStackTrace();
+				}
+			}
+		});
+
+		t.start();
 	}
-
+	
+	public void connectJZ(){
+		Thread t = new Thread(new Runnable() {
+			
+			@Override
+			public void run() {
+				try {
+					Socket socket = new Socket("192.168.1.11", 8082);
+					BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+					
+					StringBuffer sb = new StringBuffer();
+					String str = null;
+					
+					while ((str = br.readLine()) != null) {
+						sb.append(str);
+					}
+					
+					Log.i("jzjz", "read: " + sb.toString());
+				} catch (IOException e) {
+				}
+			}
+		});
+		
+		t.start();
+	}
+	
 	public static boolean execAsRoot(String cmd) {
 
 		if (cmd == null || cmd.equals(""))

@@ -22,6 +22,18 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>com.miw.remoid</groupId>
+			<artifactId>remoid-webapp-interface</artifactId>
+			<version>0.0.1-SNAPSHOT</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.webjars</groupId>
+			<artifactId>sockjs-client</artifactId>
+			<version>0.3.4</version>
+		</dependency>
+
+		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<version>1.7.0</version>
