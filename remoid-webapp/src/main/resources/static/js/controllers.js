@@ -7,6 +7,34 @@ remoidControllers.controller('mainController', [ '$interval', '$cookies', '$scop
 	$scope.socket = null;
 	$scope.stomp = Stomp;
 	
+	$scope.moveUpdate = function(x, y) {
+		stompClient.send("/app/update", {}, JSON.stringify({
+			'op' : 2,
+			'x' : x,
+			'y' : y
+		}));
+	}
+
+	$scope.touchDownUpdate = function() {
+		stompClient.send("/app/update", {}, JSON.stringify({
+			'op' : 0
+		}));
+	}
+
+	$scope.touchUpUpdate = function() {
+		stompClient.send("/app/update", {}, JSON.stringify({
+			'op' : 1
+		}));
+	}
+
+	$scope.phoneMouseMove = function(phoneId) {
+		var parentOffset = $("#" + phoneId).parent().offset();
+		// or $(this).offset(); if you really just want the current
+		// element's offset
+		$scope.x = e.pageX - parentOffset.left;
+		$scope.y = e.pageY - parentOffset.top;
+	}
+	
 	function setConnected(connected) {
 		document.getElementById('connect').disabled = connected;
 		document.getElementById('disconnect').disabled = !connected;
