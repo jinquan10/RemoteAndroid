@@ -20,6 +20,8 @@ public class PhoneServer {
 		
 		updater.println(jsonStr);
 		updater.println("EOF");
+		
+		System.out.println("updating: " + jsonStr);
 	}
 	
 	@PostConstruct

@@ -6,33 +6,45 @@ remoidControllers.controller('mainController', [ '$interval', '$cookies', '$scop
 	$scope.stompClient = null;
 	$scope.socket = null;
 	$scope.stomp = Stomp;
+	$scope.phone = {};
 	
 	$scope.moveUpdate = function(x, y) {
-		stompClient.send("/app/update", {}, JSON.stringify({
+		$scope.stompClient.send("/app/update", {}, JSON.stringify({
 			'op' : 2,
 			'x' : x,
 			'y' : y
 		}));
 	}
 
-	$scope.touchDownUpdate = function() {
-		stompClient.send("/app/update", {}, JSON.stringify({
+	$scope.phoneMouseDown = function() {
+		$scope.moveUpdate($scope.phone.x, $scope.phone.y);
+		$scope.mousedown = true;
+		
+		$scope.stompClient.send("/app/update", {}, JSON.stringify({
 			'op' : 0
 		}));
 	}
 
 	$scope.touchUpUpdate = function() {
-		stompClient.send("/app/update", {}, JSON.stringify({
+		$scope.stompClient.send("/app/update", {}, JSON.stringify({
 			'op' : 1
 		}));
 	}
 
-	$scope.phoneMouseMove = function(phoneId) {
+	$scope.phoneMouseMove = function(phoneId, e) {
 		var parentOffset = $("#" + phoneId).parent().offset();
 		// or $(this).offset(); if you really just want the current
 		// element's offset
-		$scope.x = e.pageX - parentOffset.left;
-		$scope.y = e.pageY - parentOffset.top;
+		$scope.phone = {
+			x : e.pageX - parentOffset.left,
+			y : e.pageY - parentOffset.top
+		} 
+		
+		$scope.phoneMouseDown();
+		
+//		if ($scope.mousedown) {
+//			$scope.moveUpdate($scope.phone.x, $scope.phone.y);
+//		}
 	}
 	
 	function setConnected(connected) {

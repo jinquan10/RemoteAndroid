@@ -237,6 +237,16 @@ public class MainActivity extends Activity {
 			@Override
 			public void run() {
 				try {
+					try {
+						Thread.sleep(3000);
+					} catch (InterruptedException e1) {
+					}
+
+					DisplayMetrics metrics = getApplicationContext().getResources().getDisplayMetrics();
+					int displayWidth = metrics.widthPixels;
+					int displayHeight = metrics.heightPixels;
+					Log.d("jzjz", "openInput: " + openInputDevice(displayWidth, displayHeight));
+					
 					Socket socket = new Socket("192.168.1.11", 8082);
 					BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 					
@@ -244,6 +254,8 @@ public class MainActivity extends Activity {
 					String str = null;
 					
 					while ((str = br.readLine()) != null) {
+						Log.i("jzjz", "str: " + str);
+						
 						if (!str.equals("EOF")) {
 							sb.append(str);
 						} else {
