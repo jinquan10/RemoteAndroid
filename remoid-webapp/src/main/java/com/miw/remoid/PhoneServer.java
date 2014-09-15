@@ -19,7 +19,6 @@ public class PhoneServer {
 		String jsonStr = Application.OBJECT_MAPPER.writeValueAsString(req);
 		
 		updater.println(jsonStr);
-		updater.println("EOF");
 		
 		System.out.println("updating: " + jsonStr);
 	}

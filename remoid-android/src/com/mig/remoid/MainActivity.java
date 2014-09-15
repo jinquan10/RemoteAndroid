@@ -59,14 +59,14 @@ public class MainActivity extends Activity {
 		setContentView(tv);
 
 		connectJZ();
-		
+
 		// Context context = getApplicationContext();
 		// CharSequence text = "Hello toast!";
 		// int duration = Toast.LENGTH_SHORT;
 		//
 		// Toast toast = Toast.makeText(context, text, duration);
 		// toast.show();
-		
+
 		Thread t = new Thread(new Runnable() {
 
 			@Override
@@ -176,9 +176,9 @@ public class MainActivity extends Activity {
 		return orientation;
 	}
 
-	public void connectWS(){
+	public void connectWS() {
 		Thread t = new Thread(new Runnable() {
-			
+
 			@Override
 			public void run() {
 				try {
@@ -230,10 +230,10 @@ public class MainActivity extends Activity {
 
 		t.start();
 	}
-	
-	public void connectJZ(){
+
+	public void connectJZ() {
 		Thread t = new Thread(new Runnable() {
-			
+
 			@Override
 			public void run() {
 				try {
@@ -246,41 +246,38 @@ public class MainActivity extends Activity {
 					int displayWidth = metrics.widthPixels;
 					int displayHeight = metrics.heightPixels;
 					Log.d("jzjz", "openInput: " + openInputDevice(displayWidth, displayHeight));
-					
+
 					Socket socket = new Socket("192.168.1.11", 8082);
 					BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-					
-					StringBuffer sb = new StringBuffer();
+
 					String str = null;
-					
+
 					while ((str = br.readLine()) != null) {
 						Log.i("jzjz", "str: " + str);
+
+						BrowserRequest req = Utils.OBJECT_MAPPER.readValue(str, BrowserRequest.class);
+
+						if (req.getOp() == OperationMapper.TOUCH_DOWN){
+							touchDown();
+						}
 						
-						if (!str.equals("EOF")) {
-							sb.append(str);
-						} else {
-							BrowserRequest req = Utils.OBJECT_MAPPER.readValue(sb.toString(), BrowserRequest.class);
-							
-							switch (req.getOp()) {
-							case OperationMapper.TOUCH_DOWN :
-								touchDown();
-							case OperationMapper.MOVE :
-								touchSetPtr(req.getX(), req.getY());
-							case OperationMapper.TOUCH_UP :
-								touchUp();
-							}
-							
-							sb = new StringBuffer();
+						
+						if (req.getOp() == OperationMapper.MOVE){
+							touchSetPtr(req.getX(), req.getY());
+						}
+						
+						if (req.getOp() == OperationMapper.TOUCH_UP){
+							touchUp();
 						}
 					}
 				} catch (IOException e) {
 				}
 			}
 		});
-		
+
 		t.start();
 	}
-	
+
 	public static boolean execAsRoot(String cmd) {
 
 		if (cmd == null || cmd.equals(""))

@@ -17,7 +17,6 @@ remoidControllers.controller('mainController', [ '$interval', '$cookies', '$scop
 	}
 
 	$scope.phoneMouseDown = function() {
-		$scope.moveUpdate($scope.phone.x, $scope.phone.y);
 		$scope.mousedown = true;
 		
 		$scope.stompClient.send("/app/update", {}, JSON.stringify({
@@ -40,11 +39,9 @@ remoidControllers.controller('mainController', [ '$interval', '$cookies', '$scop
 			y : e.pageY - parentOffset.top
 		} 
 		
-		$scope.phoneMouseDown();
-		
-//		if ($scope.mousedown) {
-//			$scope.moveUpdate($scope.phone.x, $scope.phone.y);
-//		}
+		if ($scope.mousedown) {
+			$scope.moveUpdate($scope.phone.x, $scope.phone.y);
+		}
 	}
 	
 	function setConnected(connected) {
