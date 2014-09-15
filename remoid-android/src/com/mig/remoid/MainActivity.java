@@ -18,12 +18,15 @@ import org.apache.http.conn.util.InetAddressUtils;
 
 import android.app.Activity;
 import android.content.res.Configuration;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
 import android.widget.TextView;
+
+import com.miw.remoid.BrowserRequest;
+import com.miw.remoid.OperationMapper;
+
 import de.roderick.weberknecht.WebSocket;
 import de.roderick.weberknecht.WebSocketEventHandler;
 import de.roderick.weberknecht.WebSocketException;
@@ -241,10 +244,23 @@ public class MainActivity extends Activity {
 					String str = null;
 					
 					while ((str = br.readLine()) != null) {
-						sb.append(str);
+						if (!str.equals("EOF")) {
+							sb.append(str);
+						} else {
+							BrowserRequest req = Utils.OBJECT_MAPPER.readValue(sb.toString(), BrowserRequest.class);
+							
+							switch (req.getOp()) {
+							case OperationMapper.TOUCH_DOWN :
+								touchDown();
+							case OperationMapper.MOVE :
+								touchSetPtr(req.getX(), req.getY());
+							case OperationMapper.TOUCH_UP :
+								touchUp();
+							}
+							
+							sb = new StringBuffer();
+						}
 					}
-					
-					Log.i("jzjz", "read: " + sb.toString());
 				} catch (IOException e) {
 				}
 			}
