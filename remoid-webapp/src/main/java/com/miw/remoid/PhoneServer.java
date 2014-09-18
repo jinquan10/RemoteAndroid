@@ -19,7 +19,7 @@ public class PhoneServer {
 	public void update(BrowserRequest req) throws JsonProcessingException {
 		String jsonStr = Singletons.OBJECT_MAPPER.writeValueAsString(req);
 		
-		updater.println(jsonStr);
+//		updater.println(jsonStr);
 		
 		System.out.println("updating: " + jsonStr);
 	}

@@ -9,7 +9,7 @@ remoidControllers.controller('mainController', [ '$interval', '$cookies', '$scop
 	$scope.phone = {};
 	
 	$scope.moveUpdate = function(x, y) {
-		$scope.stompClient.send("/app/update", {}, JSON.stringify({
+		$scope.stompClient.send("/update", {}, JSON.stringify({
 			'op' : 2,
 			'x' : x,
 			'y' : y
@@ -19,13 +19,13 @@ remoidControllers.controller('mainController', [ '$interval', '$cookies', '$scop
 	$scope.phoneMouseDown = function() {
 		$scope.mousedown = true;
 		
-		$scope.stompClient.send("/app/update", {}, JSON.stringify({
+		$scope.stompClient.send("/update", {}, JSON.stringify({
 			'op' : 0
 		}));
 	}
 
 	$scope.touchUpUpdate = function() {
-		$scope.stompClient.send("/app/update", {}, JSON.stringify({
+		$scope.stompClient.send("/update", {}, JSON.stringify({
 			'op' : 1
 		}));
 	}
@@ -39,7 +39,7 @@ remoidControllers.controller('mainController', [ '$interval', '$cookies', '$scop
 			y : e.pageY - parentOffset.top
 		} 
 		
-		if ($scope.mousedown) {
+		if ($scope.mousedown != undefined) {
 			$scope.moveUpdate($scope.phone.x, $scope.phone.y);
 		}
 	}
@@ -60,7 +60,7 @@ remoidControllers.controller('mainController', [ '$interval', '$cookies', '$scop
 	};
 
 	$scope.connect = function() {
-		$scope.socket = new SockJS('/update');
+		$scope.socket = new SockJS('/remoid/update');
 		$scope.stompClient = $scope.stomp.over($scope.socket);
 		$scope.stompClient.connect();
 	}
@@ -72,7 +72,7 @@ remoidControllers.controller('mainController', [ '$interval', '$cookies', '$scop
 	}
 
 	$scope.sendName = function() {
-		$scope.stompClient.send("/app/update", {}, JSON.stringify({
+		$scope.stompClient.send("/update", {}, JSON.stringify({
 			'name' : $scope.name
 		}));
 	}
