@@ -14,6 +14,7 @@ import com.miw.remoid.util.EnvironmentPropertyPlaceholderConfigurer;
 
 @Configuration
 @EnableWebMvc
+@EnableWebSocket
 @ComponentScan(basePackages = "com.miw.remoid")
 public class AppConfig extends WebMvcConfigurerAdapter {
     @Bean
