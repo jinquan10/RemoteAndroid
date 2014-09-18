@@ -10,13 +10,14 @@ import javax.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.miw.remoid.util.Singletons;
 
 @Component
 public class PhoneServer {
 	private PrintWriter updater; 
 	
 	public void update(BrowserRequest req) throws JsonProcessingException {
-		String jsonStr = Application.OBJECT_MAPPER.writeValueAsString(req);
+		String jsonStr = Singletons.OBJECT_MAPPER.writeValueAsString(req);
 		
 		updater.println(jsonStr);
 		
