@@ -8,15 +8,20 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurerAdapter;
+import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.config.annotation.EnableWebSocket;
+import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
+import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
+import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
 
+import com.miw.remoid.MyHandler;
 import com.miw.remoid.util.EnvironmentPropertyPlaceholderConfigurer;
 
 @Configuration
 @EnableWebMvc
 @EnableWebSocket
 @ComponentScan(basePackages = "com.miw.remoid")
-public class AppConfig extends WebMvcConfigurerAdapter {
+public class AppConfig extends WebMvcConfigurerAdapter implements WebSocketConfigurer {
     @Bean
     public static EnvironmentPropertyPlaceholderConfigurer environmentPropertyPlaceholderConfigurer() {
         EnvironmentPropertyPlaceholderConfigurer eppc = new EnvironmentPropertyPlaceholderConfigurer();
@@ -30,6 +35,15 @@ public class AppConfig extends WebMvcConfigurerAdapter {
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
         registry.addResourceHandler("/**").addResourceLocations("/public-resources/");
+    }
+    
+    public void registerWebSocketHandlers(WebSocketHandlerRegistry registry) {
+        registry.addHandler(myHandler(), "/update");
+    }
+
+    @Bean
+    public WebSocketHandler myHandler() {
+        return new MyHandler();
     }
     
     // @Bean

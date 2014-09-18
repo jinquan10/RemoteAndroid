@@ -13,6 +13,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 import org.apache.http.conn.util.InetAddressUtils;
 
@@ -22,15 +23,25 @@ import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.view.View.OnTouchListener;
+import android.widget.Button;
+import android.widget.RelativeLayout;
 import android.widget.TextView;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.koushikdutta.async.ByteBufferList;
+import com.koushikdutta.async.DataEmitter;
+import com.koushikdutta.async.callback.DataCallback;
+import com.koushikdutta.async.future.Future;
+import com.koushikdutta.async.http.AsyncHttpClient;
+import com.koushikdutta.async.http.AsyncHttpClient.WebSocketConnectCallback;
+import com.koushikdutta.async.http.WebSocket;
+import com.koushikdutta.async.http.WebSocket.StringCallback;
 import com.miw.remoid.BrowserRequest;
 import com.miw.remoid.OperationMapper;
-
-import de.roderick.weberknecht.WebSocket;
-import de.roderick.weberknecht.WebSocketEventHandler;
-import de.roderick.weberknecht.WebSocketException;
-import de.roderick.weberknecht.WebSocketMessage;
 
 // mount -o remount,rw -t yaffs2 /dev/block/mtdblock3 /system
 // http://forums.xamarin.com/discussion/689/app-in-rom-system-app-fail-to-start
@@ -55,11 +66,27 @@ public class MainActivity extends Activity {
 		 * Create a TextView and set its content. the text is retrieved by
 		 * calling a native function.
 		 */
-		TextView tv = new TextView(this);
-		setContentView(tv);
 
-		connectJZ();
+		RelativeLayout layout = new RelativeLayout(this);
+		
+		Button button = new Button(this);
+		button.setText("Connect via websocket");
+		button.setOnClickListener(new OnClickListener() {
 
+			@Override
+			public void onClick(View arg0) {
+				try {
+					connectJZ();
+				} catch (JsonProcessingException | InterruptedException | ExecutionException e) {
+					Log.e("jzjz", "error connecting to ws", e);
+				}
+			}
+		});
+		
+		
+		layout.addView(button);
+		setContentView(layout);
+		
 		// Context context = getApplicationContext();
 		// CharSequence text = "Hello toast!";
 		// int duration = Toast.LENGTH_SHORT;
@@ -176,62 +203,7 @@ public class MainActivity extends Activity {
 		return orientation;
 	}
 
-	public void connectWS() {
-		Thread t = new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				try {
-					URI url = new URI("ws://127.0.0.1:8080/update/info");
-					WebSocket websocket = new WebSocket(url);
-
-					// Register Event Handlers
-					websocket.setEventHandler(new WebSocketEventHandler() {
-						public void onOpen() {
-							System.out.println("--open");
-						}
-
-						public void onMessage(WebSocketMessage message) {
-							System.out.println("--received message: " + message.getText());
-						}
-
-						public void onClose() {
-							System.out.println("--close");
-						}
-
-						public void onPing() {
-						}
-
-						public void onPong() {
-						}
-
-						@Override
-						public void onError(IOException arg0) {
-							// TODO Auto-generated method stub
-
-						}
-					});
-
-					// Establish WebSocket Connection
-					websocket.connect();
-
-					// Send UTF-8 Text
-					websocket.send("hello world");
-
-					// Close WebSocket Connection
-					websocket.close();
-				} catch (WebSocketException wse) {
-					wse.printStackTrace();
-				} catch (URISyntaxException use) {
-					use.printStackTrace();
-				}
-			}
-		});
-
-		t.start();
-	}
-
-	public void connectJZ() {
+	public void connectJZ() throws JsonProcessingException, InterruptedException, ExecutionException {
 		Thread t = new Thread(new Runnable() {
 
 			@Override
@@ -275,7 +247,35 @@ public class MainActivity extends Activity {
 			}
 		});
 
-		t.start();
+//		t.start();
+		
+		Future<WebSocket> ws = AsyncHttpClient.getDefaultInstance().websocket("ws://192.168.1.101:8080/remoid/update", "", new WebSocketConnectCallback() {
+		    @Override
+		    public void onCompleted(Exception ex, WebSocket webSocket) {
+		        if (ex != null) {
+		            ex.printStackTrace();
+		            return;
+		        }
+		        
+		        webSocket.setStringCallback(new StringCallback() {
+		            public void onStringAvailable(String s) {
+		            	Log.i("jzjz", s);
+		            }
+		        });
+		        webSocket.setDataCallback(new DataCallback() {
+		            public void onDataAvailable(ByteBufferList byteBufferList) {
+		                System.out.println("I got some bytes!");
+		                // note that this data has been read
+		                byteBufferList.recycle();
+		            }
+
+					@Override
+					public void onDataAvailable(DataEmitter arg0, ByteBufferList arg1) {
+						
+					}
+		        });
+		    }
+		});
 	}
 
 	public static boolean execAsRoot(String cmd) {

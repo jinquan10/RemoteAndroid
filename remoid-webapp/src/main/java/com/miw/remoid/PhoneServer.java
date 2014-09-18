@@ -28,7 +28,6 @@ public class PhoneServer {
 	public void postConstruct() {
 
 		Thread t = new Thread(new Runnable() {
-			@Override
 			public void run() {
 				try {
 					ServerSocket serverSocket = new ServerSocket(8082);
