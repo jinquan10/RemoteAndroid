@@ -29,7 +29,9 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.RelativeLayout;
 
+import com.fasterxml.jackson.core.JsonParseException;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.koushikdutta.async.ByteBufferList;
 import com.koushikdutta.async.DataEmitter;
 import com.koushikdutta.async.callback.DataCallback;
@@ -85,105 +87,34 @@ public class MainActivity extends Activity {
 		layout.addView(button);
 		setContentView(layout);
 
-		// Context context = getApplicationContext();
-		// CharSequence text = "Hello toast!";
-		// int duration = Toast.LENGTH_SHORT;
+		// if (getScreenOrientation() == Configuration.ORIENTATION_LANDSCAPE) {
+		// Log.i("jzjz", "landscape");
+		// x = 0;
+		// y = displayHeight / 2;
+		// } else {
+		// x = displayWidth / 2;
+		// y = 200;
+		// }
 		//
-		// Toast toast = Toast.makeText(context, text, duration);
-		// toast.show();
+		// touchDown();
+		//
+		// while (true) {
+		// if (getScreenOrientation() == Configuration.ORIENTATION_LANDSCAPE) {
+		// if (x == displayHeight - 1) {
+		// x = 200;
+		// }
+		//
+		// touchSetPtr(x++, y);
+		// } else {
+		// if (y == displayHeight - 1) {
+		// y = 200;
+		// }
+		//
+		// touchSetPtr(x, y++);
+		// }
+		//
+		// }
 
-		Thread t = new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				try {
-					Thread.sleep(3000);
-				} catch (InterruptedException e1) {
-				}
-
-				DisplayMetrics metrics = getApplicationContext().getResources().getDisplayMetrics();
-				int displayWidth = metrics.widthPixels;
-				int displayHeight = metrics.heightPixels;
-				Log.d("jzjz", "openInput: " + openInputDevice(displayWidth, displayHeight));
-
-				Log.d("jzjz", "displayw: " + displayWidth);
-
-				int x, y;
-
-				if (getScreenOrientation() == Configuration.ORIENTATION_LANDSCAPE) {
-					Log.i("jzjz", "landscape");
-					x = 0;
-					y = displayHeight / 2;
-				} else {
-					x = displayWidth / 2;
-					y = 200;
-				}
-
-				touchDown();
-
-				while (true) {
-					if (getScreenOrientation() == Configuration.ORIENTATION_LANDSCAPE) {
-						if (x == displayHeight - 1) {
-							x = 200;
-						}
-
-						touchSetPtr(x++, y);
-					} else {
-						if (y == displayHeight - 1) {
-							y = 200;
-						}
-
-						touchSetPtr(x, y++);
-					}
-
-				}
-			}
-		});
-
-		// t.start();
-
-		Thread sockets = new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				ServerSocket serverSocket = null;
-				try {
-
-					serverSocket = new ServerSocket(5555);
-					Socket clientSocket = serverSocket.accept();
-					BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-
-					// DatagramSocket s = new DatagramSocket(5555);
-
-					long c = 0;
-					String str = null;
-
-					long t = 0;
-
-					while (true) {
-						while ((str = in.readLine()) == null) {
-						}
-						// DatagramPacket d = new DatagramPacket(new byte[1],
-						// 1);
-						// s.receive(d);
-
-						if (t == 0) {
-							t = System.currentTimeMillis();
-						}
-
-						c++;
-
-						if (c % 100000 == 0) {
-							Log.i("jzjz", "c: " + c + " clientC: " + str + " lines per second: " + (double) c / ((double) (System.currentTimeMillis() - t + 1) / 1000.d));
-						}
-					}
-				} catch (Throwable e) {
-				}
-			}
-
-		});
-
-		// sockets.start();
 	}
 
 	public int getScreenOrientation() {
@@ -240,46 +171,7 @@ public class MainActivity extends Activity {
 		final int displayWidth = metrics.widthPixels;
 		final int displayHeight = metrics.heightPixels;
 
-		Thread t = new Thread(new Runnable() {
-
-			@Override
-			public void run() {
-				try {
-					try {
-						Thread.sleep(3000);
-					} catch (InterruptedException e1) {
-					}
-
-					Log.d("jzjz", "openInput: " + openInputDevice(displayWidth, displayHeight));
-
-					Socket socket = new Socket("192.168.1.11", 8082);
-					BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-					String str = null;
-
-					while ((str = br.readLine()) != null) {
-						Log.i("jzjz", "str: " + str);
-
-						WSRequest req = Utils.OBJECT_MAPPER.readValue(str, WSRequest.class);
-
-						if (req.getOp() == OperationMapper.TOUCH_DOWN) {
-							touchDown();
-						}
-
-						if (req.getOp() == OperationMapper.MOVE) {
-							touchSetPtr(req.getX(), req.getY());
-						}
-
-						if (req.getOp() == OperationMapper.TOUCH_UP) {
-							touchUp();
-						}
-					}
-				} catch (IOException e) {
-				}
-			}
-		});
-
-		// t.start();
+		Log.d("jzjz", "openInput: " + openInputDevice(displayWidth, displayHeight));
 
 		String phoneProtocol = Utils.OBJECT_MAPPER.writeValueAsString(PhoneDimension.instantiate(displayWidth, displayHeight, getDiagonalInches()));
 
@@ -292,8 +184,24 @@ public class MainActivity extends Activity {
 				}
 
 				webSocket.setStringCallback(new StringCallback() {
-					public void onStringAvailable(String s) {
-						Log.i("jzjz", s);
+					public void onStringAvailable(String str) {
+						WSRequest req = null;
+						try {
+							req = Utils.OBJECT_MAPPER.readValue(str, WSRequest.class);
+						} catch (IOException e) {
+						}
+
+						if (req.getOp() == OperationMapper.TOUCH_DOWN) {
+							touchDown();
+						}
+
+						if (req.getOp() == OperationMapper.MOVE) {
+							touchSetPtr(req.getX(), req.getY());
+						}
+
+						if (req.getOp() == OperationMapper.TOUCH_UP) {
+							touchUp();
+						}
 					}
 				});
 				webSocket.setDataCallback(new DataCallback() {

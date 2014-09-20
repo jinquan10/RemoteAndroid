@@ -40,7 +40,7 @@ public class RemoidHandler extends TextWebSocketHandler {
 		PhoneDimension phoneDimension = Singletons.OBJECT_MAPPER.readValue(protocol.get(0), PhoneDimension.class);
 
 		phoneSessions.put(session, phoneDimension);
-		WSRequest phoneDimensionsForBrowser = updatePhoneDimensions(OperationMapper.PHONE_CONNECT);
+		WSRequest phoneDimensionsForBrowser = updatePhoneDimensions(OperationMapper.UPDATE_PHONE_CONNECTION);
 
 		for (WebSocketSession browserSession : browserSessions) {
 			browserSession.sendMessage(new TextMessage(Singletons.OBJECT_MAPPER.writeValueAsString(phoneDimensionsForBrowser)));
@@ -57,7 +57,7 @@ public class RemoidHandler extends TextWebSocketHandler {
 			browserSessions.remove(session);
 		} else {
 			phoneSessions.remove(session);
-			WSRequest request = updatePhoneDimensions(OperationMapper.PHONE_DISCONNECT);
+			WSRequest request = updatePhoneDimensions(OperationMapper.UPDATE_PHONE_CONNECTION);
 
 			for (WebSocketSession browserSession : browserSessions) {
 				browserSession.sendMessage(new TextMessage(Singletons.OBJECT_MAPPER.writeValueAsString(request)));
@@ -87,10 +87,21 @@ public class RemoidHandler extends TextWebSocketHandler {
 			if (request.getOp() == OperationMapper.BROWSER_CONNECT) {
 				browserSessions.add(session);
 
-				request = updatePhoneDimensions(OperationMapper.PHONE_CONNECT);
+				request = updatePhoneDimensions(OperationMapper.UPDATE_PHONE_CONNECTION);
 				session.sendMessage(new TextMessage(Singletons.OBJECT_MAPPER.writeValueAsString(request)));
+			} else {
+				// - just do one phone for now
+				WebSocketSession phoneSession = null;
+				
+				for (WebSocketSession ps : phoneSessions.keySet()) {
+					if (ps != null) {
+						phoneSession = ps;
+						break;
+					}
+				}
+				
+				phoneSession.sendMessage(message);
 			}
-
 		} catch (IOException e) {
 			logger.error("unable to deserialize message", e);
 		}
