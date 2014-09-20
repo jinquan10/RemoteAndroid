@@ -14,7 +14,7 @@ import org.springframework.web.socket.config.annotation.WebSocketConfigurer;
 import org.springframework.web.socket.config.annotation.WebSocketHandlerRegistry;
 import org.springframework.web.socket.server.support.HttpSessionHandshakeInterceptor;
 
-import com.miw.remoid.MyHandler;
+import com.miw.remoid.handler.RemoidHandler;
 import com.miw.remoid.util.EnvironmentPropertyPlaceholderConfigurer;
 
 @Configuration
@@ -43,8 +43,10 @@ public class AppConfig extends WebMvcConfigurerAdapter implements WebSocketConfi
 
     @Bean
     public WebSocketHandler myHandler() {
-        return new MyHandler();
+        return new RemoidHandler();
     }
+    
+    
     
     // @Bean
     // public MongoTemplate mongoTemplate(MongoCredentials mongoCredentials)

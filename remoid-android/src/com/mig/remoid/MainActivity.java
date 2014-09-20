@@ -9,8 +9,6 @@ import java.net.InetAddress;
 import java.net.NetworkInterface;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
@@ -19,17 +17,17 @@ import org.apache.http.conn.util.InetAddressUtils;
 
 import android.app.Activity;
 import android.content.res.Configuration;
+import android.graphics.Point;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Display;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.view.View.OnTouchListener;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.RelativeLayout;
-import android.widget.TextView;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.koushikdutta.async.ByteBufferList;
@@ -40,8 +38,9 @@ import com.koushikdutta.async.http.AsyncHttpClient;
 import com.koushikdutta.async.http.AsyncHttpClient.WebSocketConnectCallback;
 import com.koushikdutta.async.http.WebSocket;
 import com.koushikdutta.async.http.WebSocket.StringCallback;
-import com.miw.remoid.BrowserRequest;
 import com.miw.remoid.OperationMapper;
+import com.miw.remoid.PhoneDimension;
+import com.miw.remoid.WSRequest;
 
 // mount -o remount,rw -t yaffs2 /dev/block/mtdblock3 /system
 // http://forums.xamarin.com/discussion/689/app-in-rom-system-app-fail-to-start
@@ -68,7 +67,7 @@ public class MainActivity extends Activity {
 		 */
 
 		RelativeLayout layout = new RelativeLayout(this);
-		
+
 		Button button = new Button(this);
 		button.setText("Connect via websocket");
 		button.setOnClickListener(new OnClickListener() {
@@ -82,11 +81,10 @@ public class MainActivity extends Activity {
 				}
 			}
 		});
-		
-		
+
 		layout.addView(button);
 		setContentView(layout);
-		
+
 		// Context context = getApplicationContext();
 		// CharSequence text = "Hello toast!";
 		// int duration = Toast.LENGTH_SHORT;
@@ -203,7 +201,45 @@ public class MainActivity extends Activity {
 		return orientation;
 	}
 
+	private double getDiagonalInches() {
+		WindowManager w = getWindowManager();
+		Display d = w.getDefaultDisplay();
+		DisplayMetrics metrics = new DisplayMetrics();
+		d.getMetrics(metrics);
+		// since SDK_INT = 1;
+		int widthPixels = metrics.widthPixels;
+		int heightPixels = metrics.heightPixels;
+		// includes window decorations (statusbar bar/menu bar)
+		if (Build.VERSION.SDK_INT >= 14 && Build.VERSION.SDK_INT < 17) {
+			try {
+				widthPixels = (Integer) Display.class.getMethod("getRawWidth").invoke(d);
+				heightPixels = (Integer) Display.class.getMethod("getRawHeight").invoke(d);
+			} catch (Exception ignored) {
+			}
+		}
+		// includes window decorations (statusbar bar/menu bar)
+		if (Build.VERSION.SDK_INT >= 17) {
+			try {
+				Point realSize = new Point();
+				Display.class.getMethod("getRealSize", Point.class).invoke(d, realSize);
+				widthPixels = realSize.x;
+				heightPixels = realSize.y;
+			} catch (Exception ignored) {
+			}
+		}
+
+		DisplayMetrics dm = new DisplayMetrics();
+		getWindowManager().getDefaultDisplay().getMetrics(dm);
+		double x = Math.pow(widthPixels / dm.xdpi, 2);
+		double y = Math.pow(heightPixels / dm.ydpi, 2);
+		return Math.sqrt(x + y);
+	}
+
 	public void connectJZ() throws JsonProcessingException, InterruptedException, ExecutionException {
+		DisplayMetrics metrics = getApplicationContext().getResources().getDisplayMetrics();
+		final int displayWidth = metrics.widthPixels;
+		final int displayHeight = metrics.heightPixels;
+
 		Thread t = new Thread(new Runnable() {
 
 			@Override
@@ -214,9 +250,6 @@ public class MainActivity extends Activity {
 					} catch (InterruptedException e1) {
 					}
 
-					DisplayMetrics metrics = getApplicationContext().getResources().getDisplayMetrics();
-					int displayWidth = metrics.widthPixels;
-					int displayHeight = metrics.heightPixels;
 					Log.d("jzjz", "openInput: " + openInputDevice(displayWidth, displayHeight));
 
 					Socket socket = new Socket("192.168.1.11", 8082);
@@ -227,18 +260,17 @@ public class MainActivity extends Activity {
 					while ((str = br.readLine()) != null) {
 						Log.i("jzjz", "str: " + str);
 
-						BrowserRequest req = Utils.OBJECT_MAPPER.readValue(str, BrowserRequest.class);
+						WSRequest req = Utils.OBJECT_MAPPER.readValue(str, WSRequest.class);
 
-						if (req.getOp() == OperationMapper.TOUCH_DOWN){
+						if (req.getOp() == OperationMapper.TOUCH_DOWN) {
 							touchDown();
 						}
-						
-						
-						if (req.getOp() == OperationMapper.MOVE){
+
+						if (req.getOp() == OperationMapper.MOVE) {
 							touchSetPtr(req.getX(), req.getY());
 						}
-						
-						if (req.getOp() == OperationMapper.TOUCH_UP){
+
+						if (req.getOp() == OperationMapper.TOUCH_UP) {
 							touchUp();
 						}
 					}
@@ -247,34 +279,36 @@ public class MainActivity extends Activity {
 			}
 		});
 
-//		t.start();
-		
-		Future<WebSocket> ws = AsyncHttpClient.getDefaultInstance().websocket("ws://192.168.1.101:8080/remoid/update", "", new WebSocketConnectCallback() {
-		    @Override
-		    public void onCompleted(Exception ex, WebSocket webSocket) {
-		        if (ex != null) {
-		            ex.printStackTrace();
-		            return;
-		        }
-		        
-		        webSocket.setStringCallback(new StringCallback() {
-		            public void onStringAvailable(String s) {
-		            	Log.i("jzjz", s);
-		            }
-		        });
-		        webSocket.setDataCallback(new DataCallback() {
-		            public void onDataAvailable(ByteBufferList byteBufferList) {
-		                System.out.println("I got some bytes!");
-		                // note that this data has been read
-		                byteBufferList.recycle();
-		            }
+		// t.start();
+
+		String phoneProtocol = Utils.OBJECT_MAPPER.writeValueAsString(PhoneDimension.instantiate(displayWidth, displayHeight, getDiagonalInches()));
+
+		Future<WebSocket> ws = AsyncHttpClient.getDefaultInstance().websocket("ws://192.168.1.101:8080/remoid/update", phoneProtocol, new WebSocketConnectCallback() {
+			@Override
+			public void onCompleted(Exception ex, WebSocket webSocket) {
+				if (ex != null) {
+					ex.printStackTrace();
+					return;
+				}
+
+				webSocket.setStringCallback(new StringCallback() {
+					public void onStringAvailable(String s) {
+						Log.i("jzjz", s);
+					}
+				});
+				webSocket.setDataCallback(new DataCallback() {
+					public void onDataAvailable(ByteBufferList byteBufferList) {
+						System.out.println("I got some bytes!");
+						// note that this data has been read
+						byteBufferList.recycle();
+					}
 
 					@Override
 					public void onDataAvailable(DataEmitter arg0, ByteBufferList arg1) {
-						
+
 					}
-		        });
-		    }
+				});
+			}
 		});
 	}
 

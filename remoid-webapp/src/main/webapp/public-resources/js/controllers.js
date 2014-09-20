@@ -60,9 +60,28 @@ remoidControllers.controller('mainController', [ '$interval', '$cookies', '$scop
 	};
 
 	$scope.connect = function() {
-		$scope.socket = new SockJS('/remoid/update');
-		$scope.stompClient = $scope.stomp.over($scope.socket);
-		$scope.stompClient.connect();
+		$scope.socket = new WebSocket("ws://" + window.location.host + '/remoid/update');
+		$scope.socket.onopen = function (event) {
+			$scope.socket.send(JSON.stringify({
+				'op' : 5
+			}));
+		}
+		
+		$scope.socket.onmessage = function (event) {
+			var data = JSON.parse(event.data);
+			if(data.op == 3) {
+				var phoneX = data.phoneDimensions[0].x;
+				var phoneY = data.phoneDimensions[0].y;
+				
+				var xOverY = phoneX / phoneY;
+				
+				var widthContainer = phoneY / 3 * xOverY;
+				var heightContainer = phoneY / 3;
+				
+				$('.phone').css("width", widthContainer);
+				$('.phone').css("height", heightContainer);
+			}
+		}
 	}
 
 	function disconnect() {

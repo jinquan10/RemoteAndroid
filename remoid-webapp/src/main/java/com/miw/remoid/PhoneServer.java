@@ -16,7 +16,7 @@ import com.miw.remoid.util.Singletons;
 public class PhoneServer {
 	private PrintWriter updater; 
 	
-	public void update(BrowserRequest req) throws JsonProcessingException {
+	public void update(WSRequest req) throws JsonProcessingException {
 		String jsonStr = Singletons.OBJECT_MAPPER.writeValueAsString(req);
 		
 //		updater.println(jsonStr);

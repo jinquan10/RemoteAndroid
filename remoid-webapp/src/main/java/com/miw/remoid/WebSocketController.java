@@ -10,7 +10,7 @@ public class WebSocketController {
 	private PhoneServer phoneServer;
 	
 	@MessageMapping("/update")
-	public void update(BrowserRequest message) throws Exception {
+	public void update(WSRequest message) throws Exception {
 		phoneServer.update(message);
 	}
 }
